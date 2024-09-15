@@ -1,8 +1,10 @@
 # S3 benchmarking tool
 
-A simple tool to ease the S3 getObject benchmarking.
+A simple tool to ease the [AWS S3](https://aws.amazon.com/pm/serv-s3/?nis=8) getObject benchmarking.
 
 ## Usage
+
+Download the pre-build JAR file from [the releases page](https://github.com/nixiesearch/s3bench/releases) and run it with Java 11+.
 
 ```shell
 $ java -jar s3bench.jar --help
