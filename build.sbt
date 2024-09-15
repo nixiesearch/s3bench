@@ -1,6 +1,6 @@
 import sbt.Package.ManifestAttributes
 
-version := "0.1.0-SNAPSHOT"
+version := "0.1.0"
 
 scalaVersion := "3.5.0"
 
@@ -44,3 +44,11 @@ packageOptions                      := Seq(ManifestAttributes(("Multi-Release", 
 Compile / mainClass := Some("ai.nixiesearch.s3bench.Main")
 
 Compile / discoveredMainClasses := Seq()
+
+scalacOptions ++= Seq(
+  "-feature",
+  "-deprecation",
+  "-Xfatal-warnings",
+  "-release:11",
+  "-no-indent"
+)
