@@ -1,11 +1,12 @@
 package ai.nixiesearch.s3bench
 
+import ai.nixiesearch.s3bench.CliArgsParser.IntListConverter
 import cats.effect.IO
 import org.rogach.scallop.ScallopConf
 import org.rogach.scallop.exceptions.{Help, ScallopException, ScallopResult, Version as ScallopVersion}
 import org.rogach.scallop.{ScallopConf, ScallopOption, Subcommand, throwError, given}
 
-import scala.util.{Try, Success, Failure}
+import scala.util.{Failure, Success, Try}
 
 case class CliArgsParser(arguments: List[String]) extends ScallopConf(arguments) with Logging {
   val bucket = opt[String](name = "bucket", descr = "S3 bucket (required)", required = true)
@@ -32,6 +33,13 @@ case class CliArgsParser(arguments: List[String]) extends ScallopConf(arguments)
     required = false,
     default = Some("us-east-1")
   )
+  val verbose = opt[Boolean](name = "verbose", descr = "enable extra prints", required = false, default = Some(false))
+  val percentiles = opt[List[Int]](
+    name = "percentiles",
+    descr = "which stats to compute",
+    required = false,
+    default = Some(List(50, 90, 95, 99))
+  )(IntListConverter)
 
   banner("""Usage: s3bench  <options>
            |Options:
@@ -63,19 +71,36 @@ object CliArgsParser {
       requests: Int,
       endpoint: Option[String],
       threads: Int,
-      region: String
+      region: String,
+      verbose: Boolean,
+      percentiles: List[Int]
   )
+
+  object IntListConverter extends ArgConverter[List[Int]] {
+    override def convert(value: String): Either[String, List[Int]] =
+      value.split(",").toList.foldLeft[Either[String, List[Int]]](Right(Nil)) {
+        case (Left(err), _) => Left(err)
+        case (Right(list), next) =>
+          next.toIntOption match {
+            case Some(intValue) => Right(intValue +: list)
+            case None           => (Left(s"cannot convert $next to int value"))
+          }
+      }
+  }
+
   def load(args: List[String]): IO[CliArgs] = for {
-    parser   <- IO(CliArgsParser(args))
-    _        <- IO(parser.verify())
-    bucket   <- parse(parser.bucket)
-    prefix   <- parse(parser.prefix)
-    requests <- parse(parser.requests)
-    endpoint <- parseOption(parser.endpoint)
-    threads  <- parse(parser.threads)
-    region   <- parse(parser.region)
+    parser      <- IO(CliArgsParser(args))
+    _           <- IO(parser.verify())
+    bucket      <- parse(parser.bucket)
+    prefix      <- parse(parser.prefix)
+    requests    <- parse(parser.requests)
+    endpoint    <- parseOption(parser.endpoint)
+    threads     <- parse(parser.threads)
+    region      <- parse(parser.region)
+    verbose     <- parse(parser.verbose)
+    percentiles <- parse(parser.percentiles)
   } yield {
-    CliArgs(bucket, prefix, requests, endpoint, threads, region)
+    CliArgs(bucket, prefix, requests, endpoint, threads, region, verbose, percentiles)
   }
 
   def parse[T](option: ScallopOption[T]): IO[T] = {

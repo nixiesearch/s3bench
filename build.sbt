@@ -16,7 +16,8 @@ libraryDependencies ++= Seq(
   "software.amazon.awssdk" % "s3"                   % awsVersion,
   "co.fs2"                %% "fs2-core"             % fs2Version,
   "co.fs2"                %% "fs2-io"               % fs2Version,
-  "co.fs2"                %% "fs2-reactive-streams" % fs2Version
+  "co.fs2"                %% "fs2-reactive-streams" % fs2Version,
+  "org.apache.commons"     % "commons-math3"        % "3.6.1"
 )
 
 ThisBuild / assemblyMergeStrategy := {

@@ -10,20 +10,25 @@ object Main extends IOApp with Logging {
   override def run(args: List[String]): IO[ExitCode] = for {
     config <- CliArgsParser.load(args)
     _      <- info(s"starting job ${config}")
-    results <- S3Client
+    samples <- S3Client
       .create(config.region, config.endpoint)
       .use(client =>
         Stream
           .range[IO, Int](0, config.requests)
           .parEvalMapUnordered(config.threads)(_ => sample(config, client))
+          .through(PrintProgress.tap("requests"))
           .evalTap(sample =>
-            info(
-              s"read: request=${sample.request - sample.start} first=${sample.first - sample.start} last=${sample.end - sample.start}"
+            IO.whenA(config.verbose)(
+              info(
+                s"read: request=${sample.request - sample.start} first=${sample.first - sample.start} last=${sample.end - sample.start}"
+              )
             )
           )
           .compile
           .toList
       )
+    stats <- IO(Stats(samples, config.percentiles))
+    _     <- info("\n" + stats.print())
   } yield {
     ExitCode.Success
   }
