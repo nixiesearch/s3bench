@@ -1,54 +1,35 @@
-import sbt.Package.ManifestAttributes
+ThisBuild / version := "0.1.0-SNAPSHOT"
 
-version := "0.1.0"
+ThisBuild / scalaVersion := "3.7.4"
 
-scalaVersion := "3.5.0"
+name := "s3bench2"
 
-name := "s3bench"
+lazy val circeVersion  = "0.14.15"
+lazy val http4sVersion = "1.0.0-M46"
 
-lazy val awsVersion = "2.26.31"
-lazy val fs2Version = "3.11.0"
+fork := false
 
 libraryDependencies ++= Seq(
-  "org.typelevel"         %% "cats-effect"          % "3.5.4",
-  "ch.qos.logback"         % "logback-classic"      % "1.5.8",
-  "org.rogach"            %% "scallop"              % "5.1.0",
-  "software.amazon.awssdk" % "s3"                   % awsVersion,
-  "co.fs2"                %% "fs2-core"             % fs2Version,
-  "co.fs2"                %% "fs2-io"               % fs2Version,
-  "co.fs2"                %% "fs2-reactive-streams" % fs2Version,
-  "org.apache.commons"     % "commons-math3"        % "3.6.1"
+  "org.typelevel"          %% "cats-effect"         % "3.6.3",
+  "ch.qos.logback"          % "logback-classic"     % "1.5.21",
+  "co.fs2"                 %% "fs2-core"            % "3.12.2",
+  "co.fs2"                 %% "fs2-io"              % "3.12.2",
+  "org.scalatest"          %% "scalatest"           % "3.2.19" % "test",
+  "io.circe"               %% "circe-core"          % circeVersion,
+  "io.circe"               %% "circe-generic"       % circeVersion,
+  "io.circe"               %% "circe-parser"        % circeVersion,
+  "org.http4s"             %% "http4s-ember-client" % http4sVersion,
+  "org.http4s"             %% "http4s-dsl"          % http4sVersion,
+  "org.typelevel"          %% "log4cats-slf4j"      % "2.7.1",
+  "org.rogach"             %% "scallop"             % "6.0.0",
+  "org.scala-lang.modules" %% "scala-xml"           % "2.4.0",
+  "org.apache.commons"      % "commons-math3"       % "3.6.1"
 )
 
 ThisBuild / assemblyMergeStrategy := {
-  case PathList("module-info.class")                                         => MergeStrategy.discard
-  case "META-INF/io.netty.versions.properties"                               => MergeStrategy.first
-  case "META-INF/MANIFEST.MF"                                                => MergeStrategy.discard
-  case x if x.startsWith("META-INF/versions/")                               => MergeStrategy.first
-  case x if x.startsWith("META-INF/services/")                               => MergeStrategy.concat
-  case "META-INF/native-image/reflect-config.json"                           => MergeStrategy.concat
-  case "META-INF/native-image/io.netty/netty-common/native-image.properties" => MergeStrategy.first
-  case "META-INF/okio.kotlin_module"                                         => MergeStrategy.first
-  case "findbugsExclude.xml"                                                 => MergeStrategy.discard
-  case x if x.endsWith("/module-info.class")                                 => MergeStrategy.discard
-  case x =>
+  case PathList("module-info.class")         => MergeStrategy.discard
+  case x if x.endsWith("/module-info.class") => MergeStrategy.discard
+  case x                                     =>
     val oldStrategy = (ThisBuild / assemblyMergeStrategy).value
     oldStrategy(x)
 }
-
-assembly / assemblyJarName          := "s3bench.jar"
-ThisBuild / assemblyRepeatableBuild := false
-ThisBuild / usePipelining           := true
-packageOptions                      := Seq(ManifestAttributes(("Multi-Release", "true")))
-
-Compile / mainClass := Some("ai.nixiesearch.s3bench.Main")
-
-Compile / discoveredMainClasses := Seq()
-
-scalacOptions ++= Seq(
-  "-feature",
-  "-deprecation",
-  "-Xfatal-warnings",
-  "-release:11",
-  "-no-indent"
-)
